@@ -52,6 +52,7 @@ def calculate_lambda(model_type: str,
 
     print("model.py 53")
     print(type(lam))
+    print(lam.device)
     return lam
 
 
@@ -81,6 +82,7 @@ def calculate_mu(model_type: str,
 
     print("model.py 82")
     print(type(mu))
+    print(mu.device)
     return mu
 
 
@@ -433,6 +435,7 @@ class RemoveBackgroundPyroModel(nn.Module):
         print("model.py line429")
         print(type(chi_ambient), type(z), type(mu_cell), 
               type(lam), type(alpha), type(c))
+        print(chi_ambient.device, z.device, mu_cell.device, lam.device, alpha.device, c.device)
         return {'chi_ambient': chi_ambient, 'z': z,
                 'mu': mu_cell, 'lam': lam, 'alpha': alpha, 'counts': c}
 
@@ -597,6 +600,7 @@ def get_p_logit_prior(log_counts: torch.Tensor,
                                 p_logit_prior)
     print("model.py 598")
     print(type(p_logit_prior))
+    print(p_logit_prior.device)
     return p_logit_prior
 
 
@@ -622,6 +626,7 @@ def get_rho() -> Optional[np.ndarray]:
 
     print("model.py 623")
     print(type(rho))
+    print(rho.device)
     return rho
 
 
@@ -633,6 +638,7 @@ def get_param_store_key(key: str) -> Union[np.ndarray, None]:
 
     print("model.py 634")
     print(type(val))
+    print(val.device)
     return val
 
 
