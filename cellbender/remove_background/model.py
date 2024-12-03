@@ -50,6 +50,8 @@ def calculate_lambda(model_type: str,
         raise NotImplementedError(f"model_type was set to {model_type}, "
                                   f"which is not implemented.")
 
+    print("model.py 53")
+    print(type(lam))
     return lam
 
 
@@ -77,6 +79,8 @@ def calculate_mu(model_type: str,
         raise NotImplementedError(f"model_type was set to {model_type}, "
                                   f"which is not implemented.")
 
+    print("model.py 82")
+    print(type(mu))
     return mu
 
 
@@ -425,7 +429,10 @@ class RemoveBackgroundPyroModel(nn.Module):
         pyro.sample("epsilon_empty_mean",
                     dist.Normal(loc=epsilon_median_empty, scale=0.01),
                     obs=torch.ones_like(epsilon_median_empty))
-
+        
+        print("model.py line429")
+        print(type(chi_ambient), type(z), type(mu_cell), 
+              type(lam), type(alpha), type(c))
         return {'chi_ambient': chi_ambient, 'z': z,
                 'mu': mu_cell, 'lam': lam, 'alpha': alpha, 'counts': c}
 
@@ -588,6 +595,8 @@ def get_p_logit_prior(log_counts: torch.Tensor,
     p_logit_prior = torch.where(log_counts >= log_cell_prior_counts,
                                 ones * consts.REG_LOGIT_MEAN,
                                 p_logit_prior)
+    print("model.py 598")
+    print(type(p_logit_prior))
     return p_logit_prior
 
 
@@ -611,6 +620,8 @@ def get_rho() -> Optional[np.ndarray]:
         rho = np.array([to_ndarray(pyro.param('rho_alpha')).item(),
                         to_ndarray(pyro.param('rho_beta')).item()])
 
+    print("model.py 623")
+    print(type(rho))
     return rho
 
 
@@ -620,6 +631,8 @@ def get_param_store_key(key: str) -> Union[np.ndarray, None]:
     if key in pyro.get_param_store().keys():
         val = to_ndarray(pyro.param(key)).squeeze()
 
+    print("model.py 634")
+    print(type(val))
     return val
 
 
