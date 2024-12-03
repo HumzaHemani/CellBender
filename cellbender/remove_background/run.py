@@ -705,6 +705,7 @@ def run_inference(dataset_obj: SingleCellRNACountsDataset,
         batch_size = int(min(consts.MAX_BATCH_SIZE, frac * dataset_obj.analyzed_barcode_inds.size / 2))
 
         # Set up dataloaders.
+        print("line 708 run.py", 'cuda' if args.use_cuda else 'mps' if args.use_mps else 'cpu')
         train_loader, test_loader = \
             prep_data_for_training(dataset=count_matrix,
                                    empty_drop_dataset=dataset_obj.get_count_matrix_empties(),

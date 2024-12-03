@@ -57,7 +57,6 @@ def train_epoch(svi: SVI,
     for x_cell_batch in train_loader:
 
         # Perform gradient descent step and accumulate loss.
-        print(svi)
         epoch_loss += svi.step(x_cell_batch)
         normalizer_train += x_cell_batch.size(0)
 
