@@ -192,7 +192,6 @@ class DataLoader:
 
 def prep_sparse_data_for_training(dataset: sp.csr.csr_matrix,
                                   empty_drop_dataset: sp.csr.csr_matrix,
-                                  random_state: np.random.RandomState,
                                   device: str,
                                   training_fraction: float = consts.TRAINING_FRACTION,
                                   fraction_empties: float = consts.FRACTION_EMPTIES,
