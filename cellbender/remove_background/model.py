@@ -510,8 +510,8 @@ class RemoveBackgroundPyroModel(nn.Module):
         with pyro.plate("data", x.size(0), device=self.device):
             # Sample swapping fraction rho.
             if self.include_rho:
-                rho = pyro.sample("rho", dist.Beta(rho_alpha,
-                                                   rho_beta).expand_by([x.size(0)]))
+                rho = pyro.sample("rho", dist.Beta(rho_alpha.to(no_mpi_device),
+                                                   rho_beta.to(no_mpi_device)).expand_by([x.size(0)]))
 
             # Encode the latent variables from the input gene expression counts.
             if self.include_empties:
