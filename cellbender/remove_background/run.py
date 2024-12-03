@@ -83,7 +83,7 @@ def run_remove_background(args: argparse.Namespace) -> Posterior:
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(consts.RANDOM_SEED)
     if torch.mps.is_available():
-        torch.mps.manual_seed_all(consts.RANDOM_SEED)
+        torch.mps.seed(consts.RANDOM_SEED)
 
     # Load dataset, run inference, and write the output to a file.
 
@@ -629,7 +629,7 @@ def run_inference(dataset_obj: SingleCellRNACountsDataset,
     if args.use_cuda:
         torch.cuda.manual_seed_all(consts.RANDOM_SEED)
     if args.use_mpi:
-        torch.mpi.manual_seed_all(consts.RANDOM_SEED)
+        torch.mpi.seed(consts.RANDOM_SEED)
 
     # Attempt to load from a previously-saved checkpoint.
     ckpt = attempt_load_checkpoint(filebase=checkpoint_filename,
