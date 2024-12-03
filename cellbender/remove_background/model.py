@@ -434,6 +434,10 @@ class RemoveBackgroundPyroModel(nn.Module):
 
         """
 
+
+        # THIS IS A WORKAROUND FOR STUFF NOT IMPLEMENTED ON MPI
+        no_mpi_device = "cuda" if self.device == "cuda" else "cpu"
+
         nan_check = False
 
         if nan_check:
@@ -482,22 +486,15 @@ class RemoveBackgroundPyroModel(nn.Module):
                                   constraint=constraints.interval(consts.RHO_PARAM_MIN,
                                                                   consts.RHO_PARAM_MAX))
 
-        # THIS IS A WORKAROUND FOR GAMMA DISTRIBUTION NOT BEING IMPLEMENTED ON MPI
-        device_for_gamma = "cuda" if self.device == "cuda" else "cpu"
-
         # Initialize variational parameters for phi.
         phi_loc = pyro.param("phi_loc",
                              self.phi_loc_prior *
                              torch.ones(torch.Size([])).to(self.device),
-                             constraint=constraints.positive).to(device_for_gamma)
+                             constraint=constraints.positive).to(no_mpi_device)
         phi_scale = pyro.param("phi_scale",
                                self.phi_scale_prior *
                                torch.ones(torch.Size([])).to(self.device),
-                               constraint=constraints.positive).to(device_for_gamma)
-        print("model.py line 497")
-        print(device_for_gamma)
-        print(phi_loc)
-        print(phi_scale)
+                               constraint=constraints.positive).to(no_mpi_device)
 
         # Sample phi from a Gamma distribution (after re-parameterization).
         phi_conc = phi_loc.pow(2) / phi_scale.pow(2)
@@ -509,7 +506,7 @@ class RemoveBackgroundPyroModel(nn.Module):
             # Sample swapping fraction rho.
             if self.include_rho:
                 rho = pyro.sample("rho", dist.Beta(rho_alpha,
-                                                   rho_beta).expand_by([x.size(0)]))
+                                                   rho_beta).expand_by([x.size(0)])).to(no_mpi_device)
 
             # Encode the latent variables from the input gene expression counts.
             if self.include_empties:
