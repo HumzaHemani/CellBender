@@ -71,7 +71,7 @@ def load_or_compute_posterior_and_save(dataset_obj: 'SingleCellRNACountsDataset'
                 posterior.regularize_posterior(
                     regularization=PRq,
                     alpha=args.prq_alpha,
-                    device='cuda',
+                    device='cuda' if args.use_cuda else 'mps' if args.use_mpi else 'cpu',
                 )
             elif args.posterior_regularization == 'PRmu':
                 posterior.regularize_posterior(
@@ -79,7 +79,7 @@ def load_or_compute_posterior_and_save(dataset_obj: 'SingleCellRNACountsDataset'
                     raw_count_matrix=dataset_obj.data['matrix'],
                     fpr=args.fpr[0],
                     per_gene=False,
-                    device='cuda',
+                    device='cuda' if args.use_cuda else 'mps' if args.use_mpi else 'cpu',
                 )
             elif args.posterior_regularization == 'PRmu_gene':
                 posterior.regularize_posterior(
@@ -87,7 +87,7 @@ def load_or_compute_posterior_and_save(dataset_obj: 'SingleCellRNACountsDataset'
                     raw_count_matrix=dataset_obj.data['matrix'],
                     fpr=args.fpr[0],
                     per_gene=True,
-                    device='cuda',
+                    device='cuda' if args.use_cuda else 'mps' if args.use_mpi else 'cpu',
                 )
             else:
                 raise ValueError(f'Got a posterior regularization input of '
@@ -191,7 +191,7 @@ class Posterior:
             self.vi_model.decoder.eval()
         self.use_cuda = (torch.cuda.is_available() if vi_model is None
                          else vi_model.use_cuda)
-        self.device = 'cuda' if self.use_cuda else 'cpu'
+        self.device = 'cuda' if vi_model.use_cuda else 'mps' if vi_model.use_mpi else 'cpu',
         self.analyzed_gene_inds = (None if (dataset_obj is None)
                                    else dataset_obj.analyzed_gene_inds)
         self.count_matrix_shape = (None if (dataset_obj is None)
@@ -433,6 +433,7 @@ class Posterior:
 
         # Compute posterior in mini-batches.
         torch.cuda.empty_cache()
+        torch.mpi.empty_cache()
 
         # Dataloader for cells only.
         analyzed_bcs_only = True
@@ -460,7 +461,7 @@ class Posterior:
             batch_size=self.posterior_batch_size,
             fraction_empties=0.,
             shuffle=False,
-            use_cuda=self.use_cuda,
+            device='cuda' if self.use_cuda else 'mps' if self.use_mpi else 'cpu',
         )
 
         bcs = []  # barcode index
@@ -489,7 +490,7 @@ class Posterior:
 
             if self.debug:
                 logger.debug(f'Posterior minibatch starting with droplet {ind}')
-                logger.debug('\n' + get_hardware_usage(use_cuda=self.use_cuda))
+                logger.debug('\n' + get_hardware_usage(device='cuda' if self.use_cuda else 'mps' if self.use_mpi else 'cpu'))
 
             # Compute noise count probabilities.
             noise_log_pdf_NGC, noise_count_offset_NG = self.noise_log_pdf(
@@ -844,7 +845,7 @@ class Posterior:
             self._latents = {'z': None, 'd': None, 'p': None, 'phi_loc_scale': None, 'epsilon': None}
             return None
 
-        data_loader = self.dataset_obj.get_dataloader(use_cuda=self.use_cuda,
+        data_loader = self.dataset_obj.get_dataloader(device='cuda' if self.use_cuda else 'mps' if self.use_mpi else 'cpu',
                                                       analyzed_bcs_only=True,
                                                       batch_size=500,
                                                       shuffle=False)
@@ -1168,7 +1169,7 @@ class PRq(PosteriorRegularization):
             alpha: The tunable parameter of quantile-targeting posterior
                 regularization. The output distribution has a mean which is
                 input_mean + alpha * input_std (if possible)
-            device: Where to perform tensor operations: ['cuda', 'cpu']
+            device: Where to perform tensor operations: ['cuda', 'mpi', 'cpu']
             target_tolerance: Tolerance when searching using binary search
             n_chunks: For testing only - the number of chunks used to
                 compute the result when iterating over the posterior
@@ -1426,7 +1427,7 @@ class PRmu(PosteriorRegularization):
                 the noise model, plus this nominal false positive rate.
             per_gene: True to find one posterior regularization factor for each
                 gene, False to find one overall scalar (behavior of v0.2.0)
-            device: Where to perform tensor operations: ['cuda', 'cpu']
+            device: Where to perform tensor operations: ['cuda', 'mpi', 'cpu']
             target_tolerance: Tolerance when searching using binary search.
                 In units of counts, so this really should not be less than 0.5
             n_cells: To save time, use only this many cells to estimate removal
@@ -1571,7 +1572,7 @@ def compute_mean_target_removal_as_function(noise_count_posterior_coo: sp.coo_ma
             included in the posterior
         n_cells: Number of cells included in the posterior, same number as in
             raw_count_csr_for_cells
-        device: 'cpu' or 'cuda'
+        device: 'cpu' or 'cuda' or 'mpi'
         per_gene: True to come up with one target per gene
 
     Returns:
