@@ -170,7 +170,7 @@ class RemoveBackgroundPyroModel(nn.Module):
 
 
         # THIS IS A WORKAROUND FOR STUFF NOT IMPLEMENTED ON MPI
-        no_mpi_device = "cuda" if self.device == "cuda" else "cpu"
+        no_mps_device = "cuda" if self.device == "cuda" else "cpu"
 
         self.d_cell_scale_prior = torch.tensor(dataset_obj_priors['d_std']).to(self.device)
         self.z_loc_prior = torch.zeros(torch.Size([self.z_dim])).to(self.device)
@@ -313,14 +313,14 @@ class RemoveBackgroundPyroModel(nn.Module):
           
 
             # THIS IS A WORKAROUND FOR STUFF NOT IMPLEMENTED ON MPI
-            no_mpi_device = "cuda" if self.device == "cuda" else "cpu"
+            no_mps_device = "cuda" if self.device == "cuda" else "cpu"
 
             # Calculate the mean gene expression counts (for each barcode).
-            mu_cell = self._calculate_mu(epsilon=epsilon.to_device(no_mpi_device),
-                                         d_cell=d_cell.to_device(no_mpi_device),
-                                         chi=chi.to_device(no_mpi_device),
-                                         y=y.to_device(no_mpi_device),
-                                         rho=rho.to_device(no_mpi_device))
+            mu_cell = self._calculate_mu(epsilon=epsilon.to(no_mps_device),
+                                         d_cell=d_cell.to(no_mps_device),
+                                         chi=chi.to(no_mps_device),
+                                         y=y.to(no_mps_device),
+                                         rho=rho.to(no_mps_device))
 
             if self.include_empties:
 
@@ -444,7 +444,7 @@ class RemoveBackgroundPyroModel(nn.Module):
 
 
         # THIS IS A WORKAROUND FOR STUFF NOT IMPLEMENTED ON MPI
-        no_mpi_device = "cuda" if self.device == "cuda" else "cpu"
+        no_mps_device = "cuda" if self.device == "cuda" else "cpu"
 
         nan_check = False
 
@@ -507,15 +507,15 @@ class RemoveBackgroundPyroModel(nn.Module):
         # Sample phi from a Gamma distribution (after re-parameterization).
         phi_conc = phi_loc.pow(2) / phi_scale.pow(2)
         phi_rate = phi_loc / phi_scale.pow(2)
-        pyro.sample("phi", dist.Gamma(phi_conc.to(no_mpi_device), 
-                                      phi_rate.to(no_mpi_device)))
+        pyro.sample("phi", dist.Gamma(phi_conc.to(no_mps_device), 
+                                      phi_rate.to(no_mps_device)))
 
         # Happens in parallel for each data point (cell barcode) independently:
         with pyro.plate("data", x.size(0), device=self.device):
             # Sample swapping fraction rho.
             if self.include_rho:
-                rho = pyro.sample("rho", dist.Beta(rho_alpha.to(no_mpi_device),
-                                                   rho_beta.to(no_mpi_device)).expand_by([x.size(0)]))
+                rho = pyro.sample("rho", dist.Beta(rho_alpha.to(no_mps_device),
+                                                   rho_beta.to(no_mps_device)).expand_by([x.size(0)]))
 
             # Encode the latent variables from the input gene expression counts.
             if self.include_empties:
@@ -566,8 +566,8 @@ class RemoveBackgroundPyroModel(nn.Module):
                 # Gate epsilon and sample.
                 epsilon_gated = (prob * enc['epsilon'] + (1 - prob) * 1.)
                 epsilon = pyro.sample("epsilon",
-                                      dist.Gamma(concentration=epsilon_gated.to(no_mpi_device) * self.epsilon_prior.to(no_mpi_device),
-                                                 rate=self.epsilon_prior.to(no_mpi_device)))
+                                      dist.Gamma(concentration=epsilon_gated.to(no_mps_device) * self.epsilon_prior.to(no_mps_device),
+                                                 rate=self.epsilon_prior.to(no_mps_device)))
 
             else:
 
