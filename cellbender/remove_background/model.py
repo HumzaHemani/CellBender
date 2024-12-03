@@ -325,13 +325,13 @@ class RemoveBackgroundPyroModel(nn.Module):
             if self.include_empties:
 
                 # Calculate the background rate parameter (for each barcode).
-                lam = self._calculate_lambda(epsilon=epsilon,
-                                             chi_ambient=chi_ambient,
-                                             d_empty=d_empty,
-                                             y=y,
-                                             d_cell=d_cell,
-                                             rho=rho,
-                                             chi_bar=self.avg_gene_expression)
+                lam = self._calculate_lambda(epsilon=epsilon.to(no_mps_device),
+                                             chi_ambient=chi_ambient.to(no_mps_device),
+                                             d_empty=d_empty.to(no_mps_device),
+                                             y=y.to(no_mps_device),
+                                             d_cell=d_cell.to(no_mps_device),
+                                             rho=rho.to(no_mps_device),
+                                             chi_bar=self.avg_gene_expression.to(no_mps_device))
             else:
                 lam = torch.zeros([self.n_genes]).to(self.device)
 
