@@ -384,7 +384,7 @@ class RemoveBackgroundPyroModel(nn.Module):
                                                      y=torch.zeros_like(d_empty).to_device(self.device),
                                                      d_cell=d_cell.detach().to_device(self.device),
                                                      rho=r.to_device(self.device),
-                                                     chi_bar=self.avg_gene_expression.to_device(self.device)
+                                                     chi_bar=self.avg_gene_expression.to_device(self.device))
                         pyro.sample("obs_empty",
                                     dist.Poisson(rate=lam + consts.POISSON_EPS_SAFEGAURD).to_event(1),
                                     obs=x.reshape(-1, self.n_genes))
