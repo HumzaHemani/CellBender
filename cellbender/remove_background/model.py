@@ -488,12 +488,12 @@ class RemoveBackgroundPyroModel(nn.Module):
         # Initialize variational parameters for phi.
         phi_loc = pyro.param("phi_loc",
                              self.phi_loc_prior *
-                             torch.ones(torch.Size([])).to(device_for_gamma),
-                             constraint=constraints.positive)
+                             torch.ones(torch.Size([])).to(self.device),
+                             constraint=constraints.positive).to(device_for_gamma)
         phi_scale = pyro.param("phi_scale",
                                self.phi_scale_prior *
-                               torch.ones(torch.Size([])).to(device_for_gamma),
-                               constraint=constraints.positive)
+                               torch.ones(torch.Size([])).to(self.device),
+                               constraint=constraints.positive).to(device_for_gamma)
         print("model.py line 497")
         print(device_for_gamma)
         print(phi_loc)
