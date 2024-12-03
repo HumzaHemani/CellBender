@@ -312,22 +312,22 @@ class RemoveBackgroundPyroModel(nn.Module):
                 y = None
 
             # Calculate the mean gene expression counts (for each barcode).
-            mu_cell = self._calculate_mu(epsilon=epsilon.to_device(self.device),
-                                         d_cell=d_cell.to_device(self.device),
-                                         chi=chi.to_device(self.device),
-                                         y=y.to_device(self.device),
-                                         rho=rho.to_device(self.device))
+            mu_cell = self._calculate_mu(epsilon=epsilon.to(self.device),
+                                         d_cell=d_cell.to(self.device),
+                                         chi=chi.to(self.device),
+                                         y=y.to(self.device),
+                                         rho=rho.to(self.device))
 
             if self.include_empties:
 
                 # Calculate the background rate parameter (for each barcode).
-                lam = self._calculate_lambda(epsilon=epsilon.to_device(self.device),
-                                             chi_ambient=chi_ambient.to_device(self.device),
-                                             d_empty=d_empty.to_device(self.device),
-                                             y=y.to_device(self.device),
-                                             d_cell=d_cell.to_device(self.device),
-                                             rho=rho.to_device(self.device),
-                                             chi_bar=self.avg_gene_expression.to_device(self.device))
+                lam = self._calculate_lambda(epsilon=epsilon.to(self.device),
+                                             chi_ambient=chi_ambient.to(self.device),
+                                             d_empty=d_empty.to(self.device),
+                                             y=y.to(self.device),
+                                             d_cell=d_cell.to(self.device),
+                                             rho=rho.to(self.device),
+                                             chi_bar=self.avg_gene_expression.to(self.device))
             else:
                 lam = torch.zeros([self.n_genes]).to(self.device)
 
@@ -378,13 +378,13 @@ class RemoveBackgroundPyroModel(nn.Module):
                             r = None
 
                         # Semi-supervision of ambient expression using all empties.
-                        lam = self._calculate_lambda(epsilon=torch.tensor(1.).to(d_empty.device).to_device(self.device),  # epsilon.detach(),
-                                                     chi_ambient=chi_ambient.to_device(self.device),
-                                                     d_empty=d_empty.to_device(self.device),
-                                                     y=torch.zeros_like(d_empty).to_device(self.device),
-                                                     d_cell=d_cell.detach().to_device(self.device),
-                                                     rho=r.to_device(self.device),
-                                                     chi_bar=self.avg_gene_expression.to_device(self.device))
+                        lam = self._calculate_lambda(epsilon=torch.tensor(1.).to(d_empty.device).to(self.device),  # epsilon.detach(),
+                                                     chi_ambient=chi_ambient.to(self.device),
+                                                     d_empty=d_empty.to(self.device),
+                                                     y=torch.zeros_like(d_empty).to(self.device),
+                                                     d_cell=d_cell.detach().to(self.device),
+                                                     rho=r.to(self.device),
+                                                     chi_bar=self.avg_gene_expression.to(self.device))
                         pyro.sample("obs_empty",
                                     dist.Poisson(rate=lam + consts.POISSON_EPS_SAFEGAURD).to_event(1),
                                     obs=x.reshape(-1, self.n_genes))
