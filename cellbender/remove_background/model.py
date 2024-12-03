@@ -432,6 +432,7 @@ class RemoveBackgroundPyroModel(nn.Module):
                     dist.Normal(loc=epsilon_median_empty, scale=0.01),
                     obs=torch.ones_like(epsilon_median_empty))
         
+        alpha = alpha.to(self.device)
         print("model.py line429")
         print(type(chi_ambient), type(z), type(mu_cell), 
               type(lam), type(alpha), type(c))
