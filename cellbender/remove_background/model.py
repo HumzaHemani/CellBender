@@ -418,7 +418,7 @@ class RemoveBackgroundPyroModel(nn.Module):
 
         # Regularization of epsilon.mean()
         if surely_cell_mask.sum() >= 2:
-            epsilon_median = epsilon[probably_cell_mask].median()
+            epsilon_median = epsilon[probably_cell_mask.to(no_mps_device)].median()
             # with poutine.scale(scale=probably_cell_mask.sum() / 10.):
             pyro.sample("epsilon_mean",
                         dist.Normal(loc=epsilon_median, scale=0.01),
