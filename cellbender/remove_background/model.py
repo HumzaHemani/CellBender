@@ -503,7 +503,8 @@ class RemoveBackgroundPyroModel(nn.Module):
         # Sample phi from a Gamma distribution (after re-parameterization).
         phi_conc = phi_loc.pow(2) / phi_scale.pow(2)
         phi_rate = phi_loc / phi_scale.pow(2)
-        pyro.sample("phi", dist.Gamma(phi_conc, phi_rate))
+        pyro.sample("phi", dist.Gamma(phi_conc.to(no_mpi_device), 
+                                      phi_rate.to(no_mpi_device)))
 
         # Happens in parallel for each data point (cell barcode) independently:
         with pyro.plate("data", x.size(0), device=self.device):
