@@ -563,7 +563,7 @@ class RemoveBackgroundPyroModel(nn.Module):
                 epsilon_gated = (prob * enc['epsilon'] + (1 - prob) * 1.)
                 epsilon = pyro.sample("epsilon",
                                       dist.Gamma(concentration=epsilon_gated.to(no_mpi_device) * self.epsilon_prior.to(no_mpi_device),
-                                                 rate=self.epsilon_prior.to(no_mpi_device)).to(self.device)).to(self.device)
+                                                 rate=self.epsilon_prior.to(no_mpi_device))).to(self.device)
 
             else:
 
