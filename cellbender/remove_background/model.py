@@ -310,13 +310,17 @@ class RemoveBackgroundPyroModel(nn.Module):
             else:
                 d_empty = None
                 y = None
+          
+
+            # THIS IS A WORKAROUND FOR STUFF NOT IMPLEMENTED ON MPI
+            no_mpi_device = "cuda" if self.device == "cuda" else "cpu"
 
             # Calculate the mean gene expression counts (for each barcode).
-            mu_cell = self._calculate_mu(epsilon=epsilon,
-                                         d_cell=d_cell,
-                                         chi=chi,
-                                         y=y,
-                                         rho=rho)
+            mu_cell = self._calculate_mu(epsilon=epsilon.to_device(no_mpi_device),
+                                         d_cell=d_cell.to_device(no_mpi_device),
+                                         chi=chi.to_device(no_mpi_device),
+                                         y=y.to_device(no_mpi_device),
+                                         rho=rho.to_device(no_mpi_device))
 
             if self.include_empties:
 
