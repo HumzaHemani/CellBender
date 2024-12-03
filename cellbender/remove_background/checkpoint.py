@@ -27,6 +27,7 @@ try:
 except ImportError:
     USE_PYRO = False
 USE_CUDA = torch.cuda.is_available()
+USE_MPS = torch.mps.is_available()
 
 
 def save_random_state(filebase: str) -> List[str]:
@@ -54,6 +55,9 @@ def save_random_state(filebase: str) -> List[str]:
     if USE_CUDA:
         cuda_random_state = torch.cuda.get_rng_state_all()
         file_dict.update({filebase + '_random.cuda': cuda_random_state})
+    if USE_MPS:
+        mps_random_state = torch.mps.get_rng_state_all()
+        file_dict.update({filebase + '_random.mps': mps_random_state})
 
     # Save it
     for file, state in file_dict.items():
@@ -88,6 +92,10 @@ def load_random_state(filebase: str):
         with open(filebase + '_random.cuda', 'rb') as f:
             cuda_random_state = pickle.load(f)
         torch.cuda.set_rng_state_all(cuda_random_state)
+    if USE_MPS:
+        with open(filebase + '_random.mps', 'rb') as f:
+            mps_random_state = pickle.load(f)
+        torch.mps.set_rng_state_all(mps_random_state)
 
 
 def save_checkpoint(filebase: str,

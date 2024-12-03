@@ -88,15 +88,10 @@ class RemoveBackgroundPyroModel(nn.Module):
             'swapping', 'full'].
         encoder: An instance of an encoder object.  Can be a CompositeEncoder.
         decoder: An instance of a decoder object.
-<<<<<<< HEAD
         dataset_obj_priors: Dict which contains relevant priors.
-        use_cuda: Will use GPU if True.
         analyzed_gene_names: Here only so that when we save a checkpoint, if we
             ever want to look at it, we will know which genes are which.
-=======
-        dataset_obj: Dataset object which contains relevant priors.
         device: Specify backend: ['cuda', 'mps', 'cpu']
->>>>>>> sf_pytorch_mps_backend
         phi_loc_prior: Mean of gamma distribution for global overdispersion.
         phi_scale_prior: Scale of gamma distribution for global overdispersion.
         rho_alpha_prior: Param of beta distribution for swapping fraction.
@@ -106,7 +101,7 @@ class RemoveBackgroundPyroModel(nn.Module):
 
     Attributes:
         All the above, plus
-        device: Either 'cpu' or 'cuda' depending on value of use_cuda.
+        device: Either 'cpu', 'cuda', or 'mps'
         loss: Dict that records information about the loss during training.
 
     """

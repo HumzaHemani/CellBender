@@ -11,12 +11,12 @@ import shutil
 import subprocess
 
 
-def get_hardware_usage(use_cuda: bool) -> str:
+def get_hardware_usage(device) -> str:
     """Get a current snapshot of RAM, CPU, GPU memory, and GPU utilization as a string"""
 
     mem = psutil.virtual_memory()
 
-    if use_cuda:
+    if device=='cuda':
         # Run nvidia-smi to get GPU utilization
         gpu_query = 'utilization.gpu'
         format = 'csv,nounits,noheader'
@@ -31,8 +31,12 @@ def get_hardware_usage(use_cuda: bool) -> str:
         gpu_string = (f'Volatile GPU utilization: {pct_gpu_util} %\n'
                       f'GPU memory reserved: {torch.cuda.memory_reserved() / 1e9} GB\n'
                       f'GPU memory allocated: {torch.cuda.memory_allocated() / 1e9} GB\n')
-    else:
+    elif device=='mps':
+        gpu_string = 'still learning how to get GPU utilization from mps backend.\n'
+    elif device=='cpu':
         gpu_string = ''
+    else:
+        raise Exception(f'Invalid device: {device}')
 
     cpu_string = (f'Avg CPU load over past minute: '
                   f'{psutil.getloadavg()[0] / psutil.cpu_count() * 100:.1f} %\n'

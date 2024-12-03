@@ -105,7 +105,7 @@ class SingleSample(EstimationMethod):
             noise_log_prob_coo: The noise log prob data structure: log prob
                 values in a (m, c) COO matrix
             noise_offsets: Noise count offset values keyed by 'm'.
-            device: ['cpu', 'cuda'] - whether to perform the pytorch sampling
+            device: ['cpu', 'cuda', 'mps'] - whether to perform the pytorch sampling
                 operation on CPU or GPU. It's pretty fast on CPU already.
 
         Returns:
@@ -173,7 +173,7 @@ class MAP(EstimationMethod):
             noise_log_prob_coo: The noise log prob data structure: log prob
                 values in a (m, c) COO matrix
             noise_offsets: Noise count offset values keyed by 'm'.
-            device: ['cpu', 'cuda'] - whether to perform the pytorch argmax
+            device: ['cpu', 'cuda', 'mps'] - whether to perform the pytorch argmax
                 operation on CPU or GPU. It's pretty fast on CPU already.
 
         Returns:
@@ -777,7 +777,7 @@ def apply_function_dense_chunks(noise_log_prob_coo: sp.coo_matrix,
             indexed by 'm' as rows
         fun: Pytorch function that operates on a dense tensor and produces
             one value per row
-        device: ['cpu', 'cuda'] - whether to perform the pytorch sampling
+        device: ['cpu', 'cuda', 'mps'] - whether to perform the pytorch sampling
             operation on CPU or GPU. It's pretty fast on CPU already.
         **kwargs: Passed to fun
 

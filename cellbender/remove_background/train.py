@@ -167,7 +167,7 @@ def run_training(model: RemoveBackgroundPyroModel,
             if args.debug:
                 # Don't spend time pinging usage stats if we will not use the log.
                 # TODO: use multiprocessing to sample these stats DURING training...
-                logger.debug('\n' + get_hardware_usage(use_cuda=model.use_cuda))
+                logger.debug('\n' + get_hardware_usage(device=model.device))
 
             # Display duration of an epoch (use 2 to avoid initializations).
             if epoch == start_epoch + 1:

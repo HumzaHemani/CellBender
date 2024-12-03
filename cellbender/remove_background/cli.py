@@ -81,11 +81,22 @@ class CLI(AbstractCLI):
             assert torch.cuda.is_available(), "Trying to use CUDA, " \
                                               "but CUDA is not available."
             args.device = 'cuda'
+        # If mps is requested, make sure it is available.
+        elif args.use_mps:
+            assert torch.mps.is_available(), "Trying to use MPS, " \
+                                              "but MPS is not available."
+            args.device = 'mps'
         else:
             # Warn the user in case the CUDA flag was forgotten by mistake.
             if torch.cuda.is_available():
                 sys.stdout.write("Warning: CUDA is available, but will not be "
                                  "used.  Use the flag --cuda for "
+                                 "significant speed-ups.\n\n")
+                sys.stdout.flush()  # Write immediately
+            # Warn the user in case the MPS flag was forgotten by mistake.
+            if torch.mps.is_available():
+                sys.stdout.write("Warning: MPS is available, but will not be "
+                                 "used.  Use the flag --mps for "
                                  "significant speed-ups.\n\n")
                 sys.stdout.flush()  # Write immediately
 
