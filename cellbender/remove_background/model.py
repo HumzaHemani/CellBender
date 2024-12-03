@@ -382,13 +382,13 @@ class RemoveBackgroundPyroModel(nn.Module):
                             r = None
 
                         # Semi-supervision of ambient expression using all empties.
-                        lam = self._calculate_lambda(epsilon=torch.tensor(1.).to(d_empty.device),  # epsilon.detach(),
-                                                     chi_ambient=chi_ambient,
-                                                     d_empty=d_empty,
-                                                     y=torch.zeros_like(d_empty),
-                                                     d_cell=d_cell.detach(),
-                                                     rho=r,
-                                                     chi_bar=self.avg_gene_expression)
+                        lam = self._calculate_lambda(epsilon=torch.tensor(1.).to(d_empty.device).to(no_mps_device),  # epsilon.detach(),
+                                                     chi_ambient=chi_ambient.to(no_mps_device),
+                                                     d_empty=d_empty.to(no_mps_device),
+                                                     y=torch.zeros_like(d_empty).to(no_mps_device),
+                                                     d_cell=d_cell.detach().to(no_mps_device),
+                                                     rho=r.to(no_mps_device),
+                                                     chi_bar=self.avg_gene_expression.to(no_mps_device))
                         pyro.sample("obs_empty",
                                     dist.Poisson(rate=lam + consts.POISSON_EPS_SAFEGAURD).to_event(1),
                                     obs=x.reshape(-1, self.n_genes))
