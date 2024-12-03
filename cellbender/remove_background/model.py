@@ -494,6 +494,10 @@ class RemoveBackgroundPyroModel(nn.Module):
                                self.phi_scale_prior *
                                torch.ones(torch.Size([])).to(device_for_gamma),
                                constraint=constraints.positive)
+        print("model.py line 497")
+        print(device_for_gamma)
+        print(phi_loc)
+        print(phi_scale)
 
         # Sample phi from a Gamma distribution (after re-parameterization).
         phi_conc = phi_loc.pow(2) / phi_scale.pow(2)
