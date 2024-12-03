@@ -479,12 +479,12 @@ class RemoveBackgroundPyroModel(nn.Module):
                                    self.rho_alpha_prior *
                                    torch.ones(torch.Size([])).to(self.device),
                                    constraint=constraints.interval(consts.RHO_PARAM_MIN,
-                                                                   consts.RHO_PARAM_MAX))  # Prevent NaNs
+                                                                   consts.RHO_PARAM_MAX)).to(no_mpi_device)  # Prevent NaNs
             rho_beta = pyro.param("rho_beta",
                                   self.rho_beta_prior *
                                   torch.ones(torch.Size([])).to(self.device),
                                   constraint=constraints.interval(consts.RHO_PARAM_MIN,
-                                                                  consts.RHO_PARAM_MAX))
+                                                                  consts.RHO_PARAM_MAX)).to(no_mpi_device)
 
         # Initialize variational parameters for phi.
         phi_loc = pyro.param("phi_loc",
@@ -506,7 +506,7 @@ class RemoveBackgroundPyroModel(nn.Module):
             # Sample swapping fraction rho.
             if self.include_rho:
                 rho = pyro.sample("rho", dist.Beta(rho_alpha,
-                                                   rho_beta).expand_by([x.size(0)])).to(no_mpi_device)
+                                                   rho_beta).expand_by([x.size(0)]))
 
             # Encode the latent variables from the input gene expression counts.
             if self.include_empties:
