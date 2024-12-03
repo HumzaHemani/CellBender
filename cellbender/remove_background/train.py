@@ -296,5 +296,6 @@ def run_training(model: RemoveBackgroundPyroModel,
 
     # Free up all the GPU memory we can once training is complete.
     torch.cuda.empty_cache()
+    torch.mps.empty_cache()
 
     return train_elbo, model.loss['test']['elbo']
