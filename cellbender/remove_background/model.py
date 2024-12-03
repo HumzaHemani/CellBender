@@ -482,14 +482,17 @@ class RemoveBackgroundPyroModel(nn.Module):
                                   constraint=constraints.interval(consts.RHO_PARAM_MIN,
                                                                   consts.RHO_PARAM_MAX))
 
+        # THIS IS A WORKAROUND FOR GAMMA DISTRIBUTION NOT BEING IMPLEMENTED ON MPI
+        device_for_gamma = "cuda" if self.device == "cuda" else "cpu"
+
         # Initialize variational parameters for phi.
         phi_loc = pyro.param("phi_loc",
                              self.phi_loc_prior *
-                             torch.ones(torch.Size([])).to(self.device),
+                             torch.ones(torch.Size([])).to(device_for_gamma),
                              constraint=constraints.positive)
         phi_scale = pyro.param("phi_scale",
                                self.phi_scale_prior *
-                               torch.ones(torch.Size([])).to(self.device),
+                               torch.ones(torch.Size([])).to(device_for_gamma),
                                constraint=constraints.positive)
 
         # Sample phi from a Gamma distribution (after re-parameterization).
