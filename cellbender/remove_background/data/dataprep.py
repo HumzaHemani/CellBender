@@ -100,6 +100,7 @@ class DataLoader:
         self.shuffle = shuffle
         self.random = np.random.RandomState(seed=1234)
         self.device = device
+        self._length = None
         self._reset()
 
     @torch.no_grad()
