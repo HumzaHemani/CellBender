@@ -504,14 +504,14 @@ class RemoveBackgroundPyroModel(nn.Module):
         phi_conc = phi_loc.pow(2) / phi_scale.pow(2)
         phi_rate = phi_loc / phi_scale.pow(2)
         pyro.sample("phi", dist.Gamma(phi_conc.to(no_mpi_device), 
-                                      phi_rate.to(no_mpi_device)))
+                                      phi_rate.to(no_mpi_device)).to(self.device))
 
         # Happens in parallel for each data point (cell barcode) independently:
         with pyro.plate("data", x.size(0), device=self.device):
             # Sample swapping fraction rho.
             if self.include_rho:
                 rho = pyro.sample("rho", dist.Beta(rho_alpha.to(no_mpi_device),
-                                                   rho_beta.to(no_mpi_device)).expand_by([x.size(0)]))
+                                                   rho_beta.to(no_mpi_device)).to(self.device).expand_by([x.size(0)]))
 
             # Encode the latent variables from the input gene expression counts.
             if self.include_empties:
@@ -563,7 +563,7 @@ class RemoveBackgroundPyroModel(nn.Module):
                 epsilon_gated = (prob * enc['epsilon'] + (1 - prob) * 1.)
                 epsilon = pyro.sample("epsilon",
                                       dist.Gamma(concentration=epsilon_gated.to(no_mpi_device) * self.epsilon_prior.to(no_mpi_device),
-                                                 rate=self.epsilon_prior.to(no_mpi_device)))
+                                                 rate=self.epsilon_prior.to(no_mpi_device)).to(self.device))
 
             else:
 
