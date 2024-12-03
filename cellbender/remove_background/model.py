@@ -170,7 +170,7 @@ class RemoveBackgroundPyroModel(nn.Module):
 
 
         # THIS IS A WORKAROUND FOR STUFF NOT IMPLEMENTED ON MPI
-        no_mps_device = "cuda" if self.device == "cuda" else "cpu"
+        no_mpi_device = "cuda" if self.device == "cuda" else "cpu"
 
         self.d_cell_scale_prior = torch.tensor(dataset_obj_priors['d_std']).to(self.device)
         self.z_loc_prior = torch.zeros(torch.Size([self.z_dim])).to(self.device)
@@ -310,28 +310,24 @@ class RemoveBackgroundPyroModel(nn.Module):
             else:
                 d_empty = None
                 y = None
-          
-
-            # THIS IS A WORKAROUND FOR STUFF NOT IMPLEMENTED ON MPI
-            no_mps_device = "cuda" if self.device == "cuda" else "cpu"
 
             # Calculate the mean gene expression counts (for each barcode).
-            mu_cell = self._calculate_mu(epsilon=epsilon.to(no_mps_device),
-                                         d_cell=d_cell.to(no_mps_device),
-                                         chi=chi.to(no_mps_device),
-                                         y=y.to(no_mps_device),
-                                         rho=rho.to(no_mps_device))
+            mu_cell = self._calculate_mu(epsilon=epsilon.to_device(self.device),
+                                         d_cell=d_cell.to_device(self.device),
+                                         chi=chi.to_device(self.device),
+                                         y=y.to_device(self.device),
+                                         rho=rho.to_device(self.device))
 
             if self.include_empties:
 
                 # Calculate the background rate parameter (for each barcode).
-                lam = self._calculate_lambda(epsilon=epsilon.to(no_mps_device),
-                                             chi_ambient=chi_ambient.to(no_mps_device),
-                                             d_empty=d_empty.to(no_mps_device),
-                                             y=y.to(no_mps_device),
-                                             d_cell=d_cell.to(no_mps_device),
-                                             rho=rho.to(no_mps_device),
-                                             chi_bar=self.avg_gene_expression.to(no_mps_device))
+                lam = self._calculate_lambda(epsilon=epsilon.to_device(self.device),
+                                             chi_ambient=chi_ambient.to_device(self.device),
+                                             d_empty=d_empty.to_device(self.device),
+                                             y=y.to_device(self.device),
+                                             d_cell=d_cell.to_device(self.device),
+                                             rho=rho.to_device(self.device),
+                                             chi_bar=self.avg_gene_expression.to_device(self.device))
             else:
                 lam = torch.zeros([self.n_genes]).to(self.device)
 
@@ -382,13 +378,13 @@ class RemoveBackgroundPyroModel(nn.Module):
                             r = None
 
                         # Semi-supervision of ambient expression using all empties.
-                        lam = self._calculate_lambda(epsilon=torch.tensor(1.).to(d_empty.device).to(no_mps_device),  # epsilon.detach(),
-                                                     chi_ambient=chi_ambient.to(no_mps_device),
-                                                     d_empty=d_empty.to(no_mps_device),
-                                                     y=torch.zeros_like(d_empty).to(no_mps_device),
-                                                     d_cell=d_cell.detach().to(no_mps_device),
-                                                     rho=r.to(no_mps_device),
-                                                     chi_bar=self.avg_gene_expression.to(no_mps_device))
+                        lam = self._calculate_lambda(epsilon=torch.tensor(1.).to(d_empty.device).to_device(self.device),  # epsilon.detach(),
+                                                     chi_ambient=chi_ambient.to_device(self.device),
+                                                     d_empty=d_empty.to_device(self.device),
+                                                     y=torch.zeros_like(d_empty).to_device(self.device),
+                                                     d_cell=d_cell.detach().to_device(self.device),
+                                                     rho=r.to_device(self.device),
+                                                     chi_bar=self.avg_gene_expression.to_device(self.device)
                         pyro.sample("obs_empty",
                                     dist.Poisson(rate=lam + consts.POISSON_EPS_SAFEGAURD).to_event(1),
                                     obs=x.reshape(-1, self.n_genes))
@@ -418,13 +414,13 @@ class RemoveBackgroundPyroModel(nn.Module):
 
         # Regularization of epsilon.mean()
         if surely_cell_mask.sum() >= 2:
-            epsilon_median = epsilon[probably_cell_mask.to(no_mps_device)].median()
+            epsilon_median = epsilon[probably_cell_mask].median()
             # with poutine.scale(scale=probably_cell_mask.sum() / 10.):
             pyro.sample("epsilon_mean",
                         dist.Normal(loc=epsilon_median, scale=0.01),
                         obs=torch.ones_like(epsilon_median))
 
-        epsilon_median_empty = epsilon[probably_empty_mask.to(no_mps_device)].median()
+        epsilon_median_empty = epsilon[probably_empty_mask].median()
         # with poutine.scale(scale=probably_cell_mask.sum() / 10.):
         pyro.sample("epsilon_empty_mean",
                     dist.Normal(loc=epsilon_median_empty, scale=0.01),
@@ -444,7 +440,7 @@ class RemoveBackgroundPyroModel(nn.Module):
 
 
         # THIS IS A WORKAROUND FOR STUFF NOT IMPLEMENTED ON MPI
-        no_mps_device = "cuda" if self.device == "cuda" else "cpu"
+        no_mpi_device = "cuda" if self.device == "cuda" else "cpu"
 
         nan_check = False
 
@@ -507,15 +503,15 @@ class RemoveBackgroundPyroModel(nn.Module):
         # Sample phi from a Gamma distribution (after re-parameterization).
         phi_conc = phi_loc.pow(2) / phi_scale.pow(2)
         phi_rate = phi_loc / phi_scale.pow(2)
-        pyro.sample("phi", dist.Gamma(phi_conc.to(no_mps_device), 
-                                      phi_rate.to(no_mps_device)))
+        pyro.sample("phi", dist.Gamma(phi_conc.to(no_mpi_device), 
+                                      phi_rate.to(no_mpi_device)))
 
         # Happens in parallel for each data point (cell barcode) independently:
         with pyro.plate("data", x.size(0), device=self.device):
             # Sample swapping fraction rho.
             if self.include_rho:
-                rho = pyro.sample("rho", dist.Beta(rho_alpha.to(no_mps_device),
-                                                   rho_beta.to(no_mps_device)).expand_by([x.size(0)]))
+                rho = pyro.sample("rho", dist.Beta(rho_alpha.to(no_mpi_device),
+                                                   rho_beta.to(no_mpi_device)).expand_by([x.size(0)]))
 
             # Encode the latent variables from the input gene expression counts.
             if self.include_empties:
@@ -566,8 +562,8 @@ class RemoveBackgroundPyroModel(nn.Module):
                 # Gate epsilon and sample.
                 epsilon_gated = (prob * enc['epsilon'] + (1 - prob) * 1.)
                 epsilon = pyro.sample("epsilon",
-                                      dist.Gamma(concentration=epsilon_gated.to(no_mps_device) * self.epsilon_prior.to(no_mps_device),
-                                                 rate=self.epsilon_prior.to(no_mps_device)))
+                                      dist.Gamma(concentration=epsilon_gated.to(no_mpi_device) * self.epsilon_prior.to(no_mpi_device),
+                                                 rate=self.epsilon_prior.to(no_mpi_device)))
 
             else:
 
