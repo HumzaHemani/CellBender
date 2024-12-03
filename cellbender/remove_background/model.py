@@ -168,10 +168,14 @@ class RemoveBackgroundPyroModel(nn.Module):
         self.d_cell_loc_prior = torch.tensor(np.log1p(dataset_obj_priors['cell_counts']))\
             .float().to(self.device)
 
+
+        # THIS IS A WORKAROUND FOR STUFF NOT IMPLEMENTED ON MPI
+        no_mpi_device = "cuda" if self.device == "cuda" else "cpu"
+
         self.d_cell_scale_prior = torch.tensor(dataset_obj_priors['d_std']).to(self.device)
         self.z_loc_prior = torch.zeros(torch.Size([self.z_dim])).to(self.device)
         self.z_scale_prior = torch.ones(torch.Size([self.z_dim])).to(self.device)
-        self.epsilon_prior = torch.tensor(epsilon_prior).to(self.device)
+        self.epsilon_prior = torch.tensor(epsilon_prior).to(self.device).to(no_mpi_device)
 
         self.phi_loc_prior = (phi_loc_prior
                               * torch.ones(torch.Size([])).to(self.device))
@@ -555,7 +559,7 @@ class RemoveBackgroundPyroModel(nn.Module):
                                                               scale=d_cell_scale))
 
                 # Gate epsilon and sample.
-                epsilon_gated = (prob * enc['epsilon'] + (1 - prob) * 1.)
+                epsilon_gated = (prob * enc['epsilon'] + (1 - prob) * 1.).to(no_mpi_device)
                 epsilon = pyro.sample("epsilon",
                                       dist.Gamma(concentration=epsilon_gated * self.epsilon_prior,
                                                  rate=self.epsilon_prior))
