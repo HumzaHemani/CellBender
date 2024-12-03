@@ -83,7 +83,7 @@ def run_remove_background(args: argparse.Namespace) -> Posterior:
     if torch.cuda.is_available():
         torch.cuda.manual_seed_all(consts.RANDOM_SEED)
     if torch.mps.is_available():
-        torch.mps.seed(consts.RANDOM_SEED)
+        torch.mps.seed()
 
     # Load dataset, run inference, and write the output to a file.
 
@@ -92,7 +92,7 @@ def run_remove_background(args: argparse.Namespace) -> Posterior:
     logger.info("Running remove-background")
 
     # Run pytorch multithreaded if running on CPU: but this makes little difference in runtime.
-    if not args.use_cuda and not args.use_mpi:
+    if not args.use_cuda and not args.use_mps:
         if args.n_threads is not None:
             n_jobs = args.n_threads
         else:
@@ -254,7 +254,7 @@ def compute_output_denoised_counts_reports_metrics(posterior: Posterior,
             index_converter=posterior.index_converter,
             raw_count_csr_for_cells=cell_counts,
             n_cells=len(cell_inds),
-            device='cuda' if args.use_cuda else 'mps' if args.use_mpi else 'cpu', 
+            device='cuda' if args.use_cuda else 'mps' if args.use_mps else 'cpu', 
             per_gene=True,
         )
         noise_target_fun = lambda x: noise_target_fun_per_cell(x) * len(cell_inds)
@@ -276,7 +276,7 @@ def compute_output_denoised_counts_reports_metrics(posterior: Posterior,
                 raw_count_matrix=posterior.dataset_obj.data['matrix'],
                 fpr=fpr,
                 per_gene=True if (args.posterior_regularization == 'PRmu_gene') else False,
-                device='cuda' if args.use_cuda else 'mps' if args.use_mpi else 'cpu', 
+                device='cuda' if args.use_cuda else 'mps' if args.use_mps else 'cpu', 
             )
         else:
             # Other posterior regularizations were already performed in
@@ -298,7 +298,7 @@ def compute_output_denoised_counts_reports_metrics(posterior: Posterior,
             noise_targets_per_gene=noise_targets,
             q=args.cdf_threshold_q,
             alpha=args.prq_alpha,
-            device='cuda' if args.use_cuda else 'mps' if args.use_mpi else 'cpu', 
+            device='cuda' if args.use_cuda else 'mps' if args.use_mps else 'cpu', 
             use_multiple_processes=args.use_multiprocessing_estimation,
         )
 
@@ -628,13 +628,13 @@ def run_inference(dataset_obj: SingleCellRNACountsDataset,
     pyro.set_rng_seed(consts.RANDOM_SEED)
     if args.use_cuda:
         torch.cuda.manual_seed_all(consts.RANDOM_SEED)
-    if args.use_mpi:
-        torch.mpi.seed(consts.RANDOM_SEED)
+    if args.use_mps:
+        torch.mps.seed()
 
     # Attempt to load from a previously-saved checkpoint.
     ckpt = attempt_load_checkpoint(filebase=checkpoint_filename,
                                    tarball_name=args.input_checkpoint_tarball,
-                                   force_device='cuda:0' if args.use_cuda else 'mps:0' if args.use_mpi else 'cpu',
+                                   force_device='cuda:0' if args.use_cuda else 'mps:0' if args.use_mps else 'cpu',
                                    force_use_checkpoint=args.force_use_checkpoint)
     ckpt_loaded = ckpt['loaded']  # True if a checkpoint was loaded successfully
 
@@ -698,7 +698,7 @@ def run_inference(dataset_obj: SingleCellRNACountsDataset,
                                           analyzed_gene_names=dataset_obj.data['gene_names'][dataset_obj.analyzed_gene_inds],
                                           empty_UMI_threshold=dataset_obj.empty_UMI_threshold,
                                           log_counts_crossover=dataset_obj.priors['log_counts_crossover'],
-                                          device='cuda' if args.use_cuda else 'mps' if args.use_mpi else 'cpu')
+                                          device='cuda' if args.use_cuda else 'mps' if args.use_mps else 'cpu')
 
         # Load the dataset into DataLoaders.
         frac = args.training_fraction  # Fraction of barcodes to use for training
@@ -712,7 +712,7 @@ def run_inference(dataset_obj: SingleCellRNACountsDataset,
                                    training_fraction=frac,
                                    fraction_empties=args.fraction_empties,
                                    shuffle=True,
-                                   device='cuda' if args.use_cuda else 'mps' if args.use_mpi else 'cpu')
+                                   device='cuda' if args.use_cuda else 'mps' if args.use_mps else 'cpu')
 
         # Set up optimizer (optionally wrapped in a learning rate scheduler).
         scheduler = get_optimizer(
