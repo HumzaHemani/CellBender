@@ -175,7 +175,7 @@ class RemoveBackgroundPyroModel(nn.Module):
         self.d_cell_scale_prior = torch.tensor(dataset_obj_priors['d_std']).to(self.device)
         self.z_loc_prior = torch.zeros(torch.Size([self.z_dim])).to(self.device)
         self.z_scale_prior = torch.ones(torch.Size([self.z_dim])).to(self.device)
-        self.epsilon_prior = torch.tensor(epsilon_prior).to(self.device).to(no_mpi_device)
+        self.epsilon_prior = torch.tensor(epsilon_prior).to(self.device)
 
         self.phi_loc_prior = (phi_loc_prior
                               * torch.ones(torch.Size([])).to(self.device))
@@ -483,22 +483,22 @@ class RemoveBackgroundPyroModel(nn.Module):
                                    self.rho_alpha_prior *
                                    torch.ones(torch.Size([])).to(self.device),
                                    constraint=constraints.interval(consts.RHO_PARAM_MIN,
-                                                                   consts.RHO_PARAM_MAX)).to(no_mpi_device)  # Prevent NaNs
+                                                                   consts.RHO_PARAM_MAX)) # Prevent NaNs
             rho_beta = pyro.param("rho_beta",
                                   self.rho_beta_prior *
                                   torch.ones(torch.Size([])).to(self.device),
                                   constraint=constraints.interval(consts.RHO_PARAM_MIN,
-                                                                  consts.RHO_PARAM_MAX)).to(no_mpi_device)
+                                                                  consts.RHO_PARAM_MAX))
 
         # Initialize variational parameters for phi.
         phi_loc = pyro.param("phi_loc",
                              self.phi_loc_prior *
                              torch.ones(torch.Size([])).to(self.device),
-                             constraint=constraints.positive).to(no_mpi_device)
+                             constraint=constraints.positive)
         phi_scale = pyro.param("phi_scale",
                                self.phi_scale_prior *
                                torch.ones(torch.Size([])).to(self.device),
-                               constraint=constraints.positive).to(no_mpi_device)
+                               constraint=constraints.positive)
 
         # Sample phi from a Gamma distribution (after re-parameterization).
         phi_conc = phi_loc.pow(2) / phi_scale.pow(2)
@@ -559,10 +559,10 @@ class RemoveBackgroundPyroModel(nn.Module):
                                                               scale=d_cell_scale))
 
                 # Gate epsilon and sample.
-                epsilon_gated = (prob * enc['epsilon'] + (1 - prob) * 1.).to(no_mpi_device)
+                epsilon_gated = (prob * enc['epsilon'] + (1 - prob) * 1.)
                 epsilon = pyro.sample("epsilon",
-                                      dist.Gamma(concentration=epsilon_gated * self.epsilon_prior,
-                                                 rate=self.epsilon_prior))
+                                      dist.Gamma(concentration=epsilon_gated.to(no_mpi_device) * self.epsilon_prior.to(no_mpi_device),
+                                                 rate=self.epsilon_prior.to(no_mpi_device)))
 
             else:
 
