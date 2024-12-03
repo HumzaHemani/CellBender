@@ -174,7 +174,7 @@ def run_training(model: RemoveBackgroundPyroModel,
                 t = time.time()
 
             model.train()
-            total_epoch_loss_train = train_epoch(svi, train_loader)
+            total_epoch_loss_train = train_epoch(svi.to(model.device), model.to(self.device))
 
             train_elbo.append(-total_epoch_loss_train)
             try:
